@@ -8,7 +8,7 @@ setuptools.setup(
     version='0.0.1',
     author='Anthony Aylward',
     author_email='aaylward@eng.ucsd.edu',
-    description='Calculate enrichments of genomic regions with fine-mapping signals',
+    description='Calculate enrichment of genomic regions with fine-mapping signals',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/anthony-aylward/finrich.git',
@@ -20,8 +20,6 @@ setuptools.setup(
     ],
     install_requires=[],
     entry_points={
-        'console_scripts': [
-            'finrich=finrich.finrich:main',
-        ]
+        'console_scripts': ['finrich=finrich.finrich:main']
     }
 )

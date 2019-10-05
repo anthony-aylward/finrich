@@ -3,11 +3,6 @@
 # finrich.py
 #===============================================================================
 
-"""Calculate enrichment of genomic regions with fine-mapping signals"""
-
-
-
-
 # Imports ======================================================================
 
 from argparse import ArgumentParser
@@ -22,12 +17,45 @@ from random import sample
 # Functions ====================================================================j
 
 def ppa_in_interval(interval, finemap):
+    """Compute the total posterior probability mass contained in a
+    genomic interval
+
+    Parameters
+    ----------
+    interval
+        a BedTool representing the genomic interval
+    finemap
+        a BedTool representing the fine mapping data
+    
+    Returns
+    -------
+    float
+        the total posterior probability mass contained in the interval
+    """
+
     return sum(
         float(i.fields[-1]) for i in finemap.intersect(BedTool([interval]))
     )
 
 
-def draw_sample(dummy_n, population, k):
+def draw_sample(dummy, population, k):
+    """Draw a sample total PPA value from the background distribution
+
+    Parameters
+    ----------
+    dummy
+        a dummy variable, used for multiprocessing
+    population
+        iterable containing the population of values
+    k
+        size of the sample to draw
+    
+    Returns
+    -------
+    float
+        the total PPA of the sample drawn
+    """
+
     return sum(sample(population, k))
 
 
@@ -38,6 +66,13 @@ def permutation_test(
     permutations: int = 100_000,
     processes: int = 1
 ):
+    """Perform a permutation test for enrichment of fine-mapping signals in
+    a set of genomic regions
+
+    Parameters
+    ----------
+    """
+
     with Pool(processes=processes) as pool:
         ppa_vals = tuple(
             pool.map(

@@ -104,9 +104,7 @@ def permutation_test(
         + (0,) * (len(background) - len(ppa_vals))
     )
     max_val = sum(population[:len(regions)])
-    print(max_val)
     observed_val = sum(float(i.fields[-1]) for i in finemap.intersect(regions))
-    print(observed_val)
 
     def log_odds(val):
         if val == 0 or observed_val == max_val:
@@ -128,9 +126,6 @@ def permutation_test(
             )
         )
     pval = sum(val >= observed_val for val in empirical_dist) / permutations
-    print(pval)
-    print(len(empirical_dist))
-    print(sum(val == 0 for val in empirical_dist))
     empirical_log_odds = tuple(log_odds(val) for val in empirical_dist)
     median_log_odds = median(empirical_log_odds)
     conf_lower = empirical_log_odds[int(permutations * 0.95)]

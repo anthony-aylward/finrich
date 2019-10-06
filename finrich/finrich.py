@@ -61,7 +61,7 @@ def draw_sample(dummy, population, k):
 
 def permutation_test(
     finemap,
-    test_sites,
+    regions,
     background,
     permutations: int = 100_000,
     processes: int = 1
@@ -71,6 +71,21 @@ def permutation_test(
 
     Parameters
     ----------
+    finemap
+        a BedTool representing the fine mapping data
+    regions
+        a BedTool representing the genomic regions
+    background
+        a bedTool representing the background
+    permutations : int
+        the number of permutations to perform
+    processes : int
+        the number of processes to use
+    
+    Returns
+    -------
+    float
+        the p-value of the test
     """
 
     with Pool(processes=processes) as pool:
@@ -80,11 +95,11 @@ def permutation_test(
                 background.intersect(finemap, u=True)
             )
         )
-    test_val = sum(float(i.fields[-1]) for i in finemap.intersect(test_sites))
+    test_val = sum(float(i.fields[-1]) for i in finemap.intersect(regions))
     population = ppa_vals + (0,) * (len(background) - len(ppa_vals))
     with Pool(processes=processes) as pool:
         empirical_dist = pool.map(
-            partial(draw_sample, population=population, k=len(test_sites)),
+            partial(draw_sample, population=population, k=len(regions)),
             range(permutations)
         )
     return sum(val >= test_val for val in empirical_dist) / permutations
@@ -101,16 +116,16 @@ def parse_arguments():
         help='bed file with fine-mapping data'
     )
     parser.add_argument(
-        'sites',
-        metavar='<path/to/sites.bed>',
+        'regions',
+        metavar='<path/to/regions.bed>',
         type=BedTool,
-        help='bed file with test sites data'
+        help='bed file with test regions data'
     )
     parser.add_argument(
         'background',
         metavar='<path/to/background.bed>',
         type=BedTool,
-        help='bed file with background sites data'
+        help='bed file with background regions data'
     )
     parser.add_argument(
         '--permutations',
@@ -133,12 +148,9 @@ def main():
     args = parse_arguments()
     pval = permutation_test(
         args.finemap,
-        args.sites,
+        args.regions,
         args.background,
         permutations=args.permutations,
         processes=args.processes
     )
-    print(f'pval: {pval}')
-
-if __name__ == '__main__':
-    main()
+    print(pval)

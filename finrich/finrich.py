@@ -137,7 +137,9 @@ def permutation_test(
     conf_upper = empirical_log_odds[int(permutations * 0.05)]
     return {
         'pval': pval,
-        'logOR': median_log_odds if abs(median_log_odds) < float('inf') else 0,
+        'logOR': (
+            median_log_odds if abs(median_log_odds) < float('inf') else None
+        ),
         'conf_lower': conf_lower,
         'conf_upper': conf_upper
     }

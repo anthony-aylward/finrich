@@ -5,11 +5,15 @@
 
 # Imports ======================================================================
 
+import json
+
 from argparse import ArgumentParser
 from functools import partial
+from math import log
 from multiprocessing import Pool
 from pybedtools import BedTool
 from random import sample
+from statistics import mean
 
 
 
@@ -95,14 +99,39 @@ def permutation_test(
                 background.intersect(finemap, u=True)
             )
         )
-    test_val = sum(float(i.fields[-1]) for i in finemap.intersect(regions))
-    population = ppa_vals + (0,) * (len(background) - len(ppa_vals))
-    with Pool(processes=processes) as pool:
-        empirical_dist = pool.map(
-            partial(draw_sample, population=population, k=len(regions)),
-            range(permutations)
+    population =  (
+        tuple(sorted(ppa_vals, reverse=True))
+        + (0,) * (len(background) - len(ppa_vals))
+    )
+    max_val = sum(popultion[:len(regions)])
+    observed_val = sum(float(i.fields[-1]) for i in finemap.intersect(regions))
+
+    def log_odds(val):
+        return (
+            log(observed_val)
+            + log(max_val - val)
+            - log(max_val - observed_val)
+            - log(val)
         )
-    return sum(val >= test_val for val in empirical_dist) / permutations
+
+    with Pool(processes=processes) as pool:
+        empirical_dist = sorted(
+            pool.map(
+                partial(draw_sample, population=population, k=len(regions)),
+                range(permutations)
+            )
+        )
+    pval = sum(val >= observed_val for val in empirical_dist) / permutations
+    empirical_log_odds = tuple(log_odds(val) for val in empirical_dist)
+    mean_log_odds = mean(empirical_log_odds)
+    conf_lower = empirical_log_odds[int(permutations * 0.95)]
+    conf_upper = empirical_log_odds[int(permutations * 0.05)]
+    return {
+        'pval': pval,
+        'logOR': mean_log_odds,
+        'conf_lower': conf_lower,
+        'conf_upper': conf_upper
+    }
 
 
 def parse_arguments():
@@ -146,11 +175,11 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-    pval = permutation_test(
+    result = permutation_test(
         args.finemap,
         args.regions,
         args.background,
         permutations=args.permutations,
         processes=args.processes
     )
-    print(pval)
+    print(json.dumps(result))

@@ -103,7 +103,7 @@ def permutation_test(
         tuple(sorted(ppa_vals, reverse=True))
         + (0,) * (len(background) - len(ppa_vals))
     )
-    max_val = sum(popultion[:len(regions)])
+    max_val = sum(population[:len(regions)])
     observed_val = sum(float(i.fields[-1]) for i in finemap.intersect(regions))
 
     def log_odds(val):

@@ -131,7 +131,7 @@ def parse_arguments():
         '--permutations',
         metavar='<int>',
         type=int,
-        default=100_000,
+        default=10_000,
         help='number of permutations'
     )
     parser.add_argument(

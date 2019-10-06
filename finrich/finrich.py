@@ -125,6 +125,8 @@ def permutation_test(
         )
     pval = sum(val >= observed_val for val in empirical_dist) / permutations
     print(pval)
+    print(len(empirical_dist))
+    print(sum(val == 0 for val in empirical_dist))
     empirical_log_odds = tuple(log_odds(val) for val in empirical_dist)
     mean_log_odds = mean(empirical_log_odds)
     conf_lower = empirical_log_odds[int(permutations * 0.95)]

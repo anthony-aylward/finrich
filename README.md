@@ -15,5 +15,5 @@ pip3 install --user finrich
 ## Example
 ```
 finrich --help
-finrich finemap.bed regions.bed background.bed --permutations 1e3 --processes 2
+finrich finemap.bed regions.bed background.bed --permutations 1000 --processes 2
 ```

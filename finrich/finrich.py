@@ -109,9 +109,9 @@ def permutation_test(
     print(observed_val)
 
     def log_odds(val):
-        if val == 0:
+        if val == 0 or observed_val == max_val:
             return float('inf')
-        if val == max_val:
+        if val == max_val or observed_val == 0:
             return float('-inf')
         return (
             log(observed_val)

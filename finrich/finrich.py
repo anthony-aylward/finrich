@@ -13,7 +13,7 @@ from math import log
 from multiprocessing import Pool
 from pybedtools import BedTool
 from random import sample
-from statistics import mean
+from statistics import median
 
 
 
@@ -109,6 +109,10 @@ def permutation_test(
     print(observed_val)
 
     def log_odds(val):
+        if val == 0:
+            return float('inf')
+        if val == max_val:
+            return float('-inf')
         return (
             log(observed_val)
             + log(max_val - val)
@@ -128,12 +132,12 @@ def permutation_test(
     print(len(empirical_dist))
     print(sum(val == 0 for val in empirical_dist))
     empirical_log_odds = tuple(log_odds(val) for val in empirical_dist)
-    mean_log_odds = mean(empirical_log_odds)
+    median_log_odds = median(empirical_log_odds)
     conf_lower = empirical_log_odds[int(permutations * 0.95)]
     conf_upper = empirical_log_odds[int(permutations * 0.05)]
     return {
         'pval': pval,
-        'logOR': mean_log_odds,
+        'logOR': median_log_odds,
         'conf_lower': conf_lower,
         'conf_upper': conf_upper
     }

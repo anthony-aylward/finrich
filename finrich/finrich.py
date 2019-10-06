@@ -13,7 +13,7 @@ from math import log
 from multiprocessing import Pool
 from pybedtools import BedTool
 from random import sample
-from statistics import median
+from statistics import mean
 
 
 

@@ -132,13 +132,15 @@ def permutation_test(
     a = empirical_mean ** 2 / empirical_var
     scale = empirical_var / empirical_mean
     mean_pp = gamma.cdf(empirical_mean, a, scale=scale)
-    empirical_conf_lower = (
-        gamma.ppf(mean_pp - 0.475, a, scale=scale) if mean_pp > 0.475 else 0
-    )
-    empirical_conf_upper = (
-        gamma.ppf(mean_pp + 0.475, a, scale=scale) if mean_pp > 0.475
-        else gamma.ppf(0.95)
-    )
+    if mean_pp <= 0.475:
+        empirical_conf_lower = 0
+        empirical_conf_upper = gamma.ppf(0.95, a, scale=scale)
+    elif mean_pp >= 0.525:
+        empirical_conf_lower = gamma.ppf(0.025, a, scale=scale)
+        empirical_conf_upper = gamma.ppf(0.975, a, scale=scale)
+    else:
+        empirical_conf_lower = gamma.ppf(mean_pp - 0.475, a, scale=scale)
+        empirical_conf_upper = gamma.ppf(mean_pp + 0.475, a, scale=scale)
     return {
         'pval': pval,
         'logOR': log_odds(empirical_mean),

@@ -13,6 +13,7 @@ from math import log
 from multiprocessing import Pool
 from pybedtools import BedTool
 from random import sample
+from scipy.stats import gamma
 from statistics import mean
 
 
@@ -126,17 +127,20 @@ def permutation_test(
             )
         )
     pval = sum(val >= observed_val for val in empirical_dist) / permutations
-    mean_log_odds = log_odds(mean(empirical_dist))
-    empirical_log_odds = tuple(log_odds(val) for val in empirical_dist)
-    conf_lower = empirical_log_odds[int(permutations * 0.95)]
-    conf_upper = empirical_log_odds[int(permutations * 0.05)]
+    a, _, scale = gamma.fit(empirical_dist, floc=0)
+    empirical_mean = gamma.mean(a, scale=scale)
+    mean_pp = gamma.cdf(empirical_mean, a, scale=scale)
+    empirical_conf_lower = (
+        gamma.ppf(mean_pp - 0.475) if mean_pp > 0.475 else 0
+    )
+    empirical_conf_upper = (
+        gamma.ppf(mean_pp + 0.475) if mean_pp > 0.475 else gamma.ppf(0.95)
+    )
     return {
         'pval': pval,
-        'logOR': (
-            mean_log_odds if abs(mean_log_odds) < float('inf') else None
-        ),
-        'conf_lower': conf_lower,
-        'conf_upper': conf_upper
+        'logOR': log_odds(empirical_mean),
+        'conf_lower': log_odds(empirical_conf_upper),
+        'conf_upper': log_odds(empirical_conf_lower)
     }
 
 

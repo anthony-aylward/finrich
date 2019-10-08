@@ -190,16 +190,16 @@ def parse_arguments():
         help='bed file with background regions data'
     )
     parser.add_argument(
+        '--non-parametric',
+        action='store_true',
+        help='return non-parametric estimates'
+    )
+    parser.add_argument(
         '--conf',
         metavar='<float>',
         type=float,
         default=0.95,
         help='confidence level for interval estimates [0.95]'
-    )
-    parser.add_argument(
-        '--non-parametric',
-        action='store_true',
-        help='return non-parametric estimates'
     )
     parser.add_argument(
         '--permutations',
@@ -213,7 +213,7 @@ def parse_arguments():
         metavar='<int>',
         type=int,
         default=1,
-        help='number of processes to use'
+        help='number of processes to use [1]'
     )
     return parser.parse_args()
 

@@ -68,6 +68,7 @@ def permutation_test(
     finemap,
     regions,
     background,
+    parametric=True,
     permutations: int = 100_000,
     processes: int = 1
 ):
@@ -82,6 +83,8 @@ def permutation_test(
         a BedTool representing the genomic regions
     background
         a bedTool representing the background
+    parametric : bool
+        if true, use parametric esimates of logOR and confidence intervals
     permutations : int
         the number of permutations to perform
     processes : int
@@ -185,7 +188,7 @@ def parse_arguments():
         metavar='<int>',
         type=int,
         default=10_000,
-        help='number of permutations'
+        help='number of permutations [10000]'
     )
     parser.add_argument(
         '--processes',

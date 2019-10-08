@@ -129,36 +129,39 @@ def permutation_test(
                 range(permutations)
             )
         )
-    empirical_mean = mean(empirical_dist)
-    empirical_var = variance(empirical_dist)
-    a = empirical_mean ** 2 / empirical_var
-    scale = empirical_var / empirical_mean
-    mean_pp = gamma.cdf(empirical_mean, a, scale=scale)
-    if mean_pp <= 0.475:
-        empirical_conf_lower = 0
-        empirical_conf_upper = gamma.ppf(0.95, a, scale=scale)
-    elif mean_pp >= 0.525:
-        empirical_conf_lower = gamma.ppf(0.025, a, scale=scale)
-        empirical_conf_upper = gamma.ppf(0.975, a, scale=scale)
+    pval = sum(val >= observed_val for val in empirical_dist) / permutations
+    if parametric:
+        empirical_mean = mean(empirical_dist)
+        empirical_var = variance(empirical_dist)
+        a = empirical_mean ** 2 / empirical_var
+        scale = empirical_var / empirical_mean
+        mean_pp = gamma.cdf(empirical_mean, a, scale=scale)
+        if mean_pp <= 0.475:
+            empirical_conf_lower = 0
+            empirical_conf_upper = gamma.ppf(0.95, a, scale=scale)
+        elif mean_pp >= 0.525:
+            empirical_conf_lower = gamma.ppf(0.025, a, scale=scale)
+            empirical_conf_upper = gamma.ppf(0.975, a, scale=scale)
+        else:
+            empirical_conf_lower = gamma.ppf(mean_pp - 0.475, a, scale=scale)
+            empirical_conf_upper = gamma.ppf(mean_pp + 0.475, a, scale=scale)
+        return {
+            'pval': pval,
+            'logOR': log_odds(empirical_mean),
+            'conf_lower': log_odds(empirical_conf_upper),
+            'conf_upper': log_odds(empirical_conf_lower)
+        }
     else:
-        empirical_conf_lower = gamma.ppf(mean_pp - 0.475, a, scale=scale)
-        empirical_conf_upper = gamma.ppf(mean_pp + 0.475, a, scale=scale)
-    return {
-        'pval': (
-            sum(val >= observed_val for val in empirical_dist) / permutations
-        ),
-        'parametric_logOR': log_odds(empirical_mean),
-        'parametric_conf_lower': log_odds(empirical_conf_upper),
-        'parametric_conf_upper': log_odds(empirical_conf_lower),
-        'empirical_logOR': log_odds(median(empirical_dist)),
-        'empirical_conf_lower': log_odds(
-            empirical_dist[int(permutations * 0.95)]
-        ),
-        'empirical_conf_upper': log_odds(
-            empirical_dist[int(permutations * 0.05)]
-        )
-
-    }
+        return {
+            'pval': pval,
+            'logOR': log_odds(median(empirical_dist)),
+            'conf_lower': log_odds(
+                empirical_dist[int(permutations * 0.95)]
+            ),
+            'conf_upper': log_odds(
+                empirical_dist[int(permutations * 0.05)]
+            )
+        }
 
 
 def parse_arguments():
@@ -184,6 +187,11 @@ def parse_arguments():
         help='bed file with background regions data'
     )
     parser.add_argument(
+        '--non-parametric',
+        action='store_true',
+        help='return non-parametric estimates'
+    )
+    parser.add_argument(
         '--permutations',
         metavar='<int>',
         type=int,
@@ -206,6 +214,7 @@ def main():
         args.finemap,
         args.regions,
         args.background,
+        parametric = not args.non_parametric,
         permutations=args.permutations,
         processes=args.processes
     )

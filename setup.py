@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='finrich',
-    version='0.1.8',
+    version='0.2.0',
     author='Anthony Aylward',
     author_email='aaylward@eng.ucsd.edu',
     description='Calculate enrichment of genomic regions with fine-mapping signals',

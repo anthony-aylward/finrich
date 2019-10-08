@@ -194,7 +194,7 @@ def parse_arguments():
         metavar='<float>',
         type=float,
         default=0.95,
-        help='confidence level for interval estimates'
+        help='confidence level for interval estimates [0.95]'
     )
     parser.add_argument(
         '--non-parametric',

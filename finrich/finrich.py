@@ -190,6 +190,13 @@ def parse_arguments():
         help='bed file with background regions data'
     )
     parser.add_argument(
+        '--conf',
+        metavar='<float>',
+        type=float,
+        default=0.95,
+        help='confidence level for interval estimates'
+    )
+    parser.add_argument(
         '--non-parametric',
         action='store_true',
         help='return non-parametric estimates'
@@ -217,6 +224,7 @@ def main():
         args.finemap,
         args.regions,
         args.background,
+        conf = args.conf,
         parametric = not args.non_parametric,
         permutations=args.permutations,
         processes=args.processes

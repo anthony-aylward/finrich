@@ -95,8 +95,8 @@ def permutation_test(
     
     Returns
     -------
-    float
-        the p-value of the test
+    dict
+        a dictionary with keys 'pval', 'logOR', 'conf_lower', 'conf_upper'
     """
 
     with Pool(processes=processes) as pool:

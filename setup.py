@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='finrich',
-    version='0.1.8',
+    version='0.1.9',
     author='Anthony Aylward',
     author_email='aaylward@eng.ucsd.edu',
     description='Calculate enrichment of genomic regions with fine-mapping signals',
@@ -18,7 +18,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent"
     ],
-    install_requires=['pybedtools', ''],
+    install_requires=['pybedtools', 'scipy'],
     entry_points={
         'console_scripts': ['finrich=finrich.finrich:main']
     }

@@ -68,7 +68,8 @@ def permutation_test(
     finemap,
     regions,
     background,
-    parametric=True,
+    conf: float = 0.95,
+    parametric: bool = True,
     permutations: int = 100_000,
     processes: int = 1
 ):
@@ -83,6 +84,8 @@ def permutation_test(
         a BedTool representing the genomic regions
     background
         a bedTool representing the background
+    conf : float
+        confidence level for interval estimates
     parametric : bool
         if true, use parametric esimates of logOR and confidence intervals
     permutations : int
@@ -92,8 +95,8 @@ def permutation_test(
     
     Returns
     -------
-    float
-        the p-value of the test
+    dict
+        a dictionary with keys 'pval', 'logOR', 'conf_lower', 'conf_upper'
     """
 
     with Pool(processes=processes) as pool:
@@ -129,36 +132,39 @@ def permutation_test(
                 range(permutations)
             )
         )
-    empirical_mean = mean(empirical_dist)
-    empirical_var = variance(empirical_dist)
-    a = empirical_mean ** 2 / empirical_var
-    scale = empirical_var / empirical_mean
-    mean_pp = gamma.cdf(empirical_mean, a, scale=scale)
-    if mean_pp <= 0.475:
-        empirical_conf_lower = 0
-        empirical_conf_upper = gamma.ppf(0.95, a, scale=scale)
-    elif mean_pp >= 0.525:
-        empirical_conf_lower = gamma.ppf(0.025, a, scale=scale)
-        empirical_conf_upper = gamma.ppf(0.975, a, scale=scale)
+    pval = sum(val >= observed_val for val in empirical_dist) / permutations
+    if parametric:
+        empirical_mean = mean(empirical_dist)
+        empirical_var = variance(empirical_dist)
+        a = empirical_mean ** 2 / empirical_var
+        scale = empirical_var / empirical_mean
+        mean_pp = gamma.cdf(empirical_mean, a, scale=scale)
+        if mean_pp <= conf / 2:
+            empirical_conf_lower = 0
+            empirical_conf_upper = gamma.ppf(conf, a, scale=scale)
+        elif mean_pp >= 1 - conf / 2:
+            empirical_conf_lower = gamma.ppf((1 - conf) / 2, a, scale=scale)
+            empirical_conf_upper = gamma.ppf(1 - (1 - conf) / 2, a, scale=scale)
+        else:
+            empirical_conf_lower = gamma.ppf(mean_pp - conf / 2, a, scale=scale)
+            empirical_conf_upper = gamma.ppf(mean_pp + conf / 2, a, scale=scale)
+        return {
+            'pval': pval,
+            'logOR': log_odds(empirical_mean),
+            'conf_lower': log_odds(empirical_conf_upper),
+            'conf_upper': log_odds(empirical_conf_lower)
+        }
     else:
-        empirical_conf_lower = gamma.ppf(mean_pp - 0.475, a, scale=scale)
-        empirical_conf_upper = gamma.ppf(mean_pp + 0.475, a, scale=scale)
-    return {
-        'pval': (
-            sum(val >= observed_val for val in empirical_dist) / permutations
-        ),
-        'parametric_logOR': log_odds(empirical_mean),
-        'parametric_conf_lower': log_odds(empirical_conf_upper),
-        'parametric_conf_upper': log_odds(empirical_conf_lower),
-        'empirical_logOR': log_odds(median(empirical_dist)),
-        'empirical_conf_lower': log_odds(
-            empirical_dist[int(permutations * 0.95)]
-        ),
-        'empirical_conf_upper': log_odds(
-            empirical_dist[int(permutations * 0.05)]
-        )
-
-    }
+        return {
+            'pval': pval,
+            'logOR': log_odds(median(empirical_dist)),
+            'conf_lower': log_odds(
+                empirical_dist[int(permutations * 0.95)]
+            ),
+            'conf_upper': log_odds(
+                empirical_dist[int(permutations * 0.05)]
+            )
+        }
 
 
 def parse_arguments():
@@ -184,6 +190,18 @@ def parse_arguments():
         help='bed file with background regions data'
     )
     parser.add_argument(
+        '--non-parametric',
+        action='store_true',
+        help='return non-parametric estimates'
+    )
+    parser.add_argument(
+        '--conf',
+        metavar='<float>',
+        type=float,
+        default=0.95,
+        help='confidence level for interval estimates [0.95]'
+    )
+    parser.add_argument(
         '--permutations',
         metavar='<int>',
         type=int,
@@ -195,7 +213,7 @@ def parse_arguments():
         metavar='<int>',
         type=int,
         default=1,
-        help='number of processes to use'
+        help='number of processes to use [1]'
     )
     return parser.parse_args()
 
@@ -206,6 +224,8 @@ def main():
         args.finemap,
         args.regions,
         args.background,
+        conf = args.conf,
+        parametric = not args.non_parametric,
         permutations=args.permutations,
         processes=args.processes
     )

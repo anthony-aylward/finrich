@@ -18,7 +18,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent"
     ],
-    install_requires=['pybedtools', ''],
+    install_requires=['pybedtools', 'scipy'],
     entry_points={
         'console_scripts': ['finrich=finrich.finrich:main']
     }

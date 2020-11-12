@@ -96,7 +96,8 @@ def permutation_test(
     Returns
     -------
     dict
-        a dictionary with keys 'pval', 'logOR', 'conf_lower', 'conf_upper'
+        a dictionary with keys 'pval', 'fold_enrich', 'logOR', 'conf_lower',
+        'conf_upper'
     """
 
     with Pool(processes=processes) as pool:
@@ -133,8 +134,14 @@ def permutation_test(
             )
         )
     pval = sum(val >= observed_val for val in empirical_dist) / permutations
+    empirical_mean = mean(empirical_dist)
+    if empirical_mean == 0:
+        raise RuntimeError(
+            'The mean of the empirical distribution appears to be zero. '
+            'Increasing the number of permutations MIGHT solve this problem.'
+        )
+    fold_change = observed_val / empirical_mean,
     if parametric:
-        empirical_mean = mean(empirical_dist)
         empirical_var = variance(empirical_dist)
         a = empirical_mean ** 2 / empirical_var
         scale = empirical_var / empirical_mean
@@ -150,6 +157,7 @@ def permutation_test(
             empirical_conf_upper = gamma.ppf(mean_pp + conf / 2, a, scale=scale)
         return {
             'pval': pval,
+            'fold_enrich': fold_change,
             'logOR': log_odds(empirical_mean),
             'conf_lower': log_odds(empirical_conf_upper),
             'conf_upper': log_odds(empirical_conf_lower)
@@ -157,6 +165,7 @@ def permutation_test(
     else:
         return {
             'pval': pval,
+            'fold_enrich': fold_change,
             'logOR': log_odds(median(empirical_dist)),
             'conf_lower': log_odds(
                 empirical_dist[int(permutations * 0.95)]

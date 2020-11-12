@@ -111,6 +111,8 @@ def permutation_test(
         tuple(sorted(ppa_vals, reverse=True))
         + (0,) * (len(background) - len(ppa_vals))
     )
+    if max(population) == 0:
+        raise RuntimeError('No loci in background, analysis not possible')
     max_val = sum(population[:len(regions)])
     observed_val = sum(float(i.fields[-1]) for i in finemap.intersect(regions))
 
@@ -140,7 +142,7 @@ def permutation_test(
             'The mean of the empirical distribution appears to be zero. '
             'Increasing the number of permutations MIGHT solve this problem.'
         )
-    fold_change = observed_val / empirical_mean,
+    fold_change = observed_val / empirical_mean
     if parametric:
         empirical_var = variance(empirical_dist)
         a = empirical_mean ** 2 / empirical_var
